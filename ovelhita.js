@@ -29,8 +29,6 @@ const COMANDOS_DE_VOZ = {
   limpar: ['limpa', 'limpar']
 };
 
-const GRAMATICA = `#JSGF V1.0; grammar comando; public <comando> = ${Object.values(COMANDOS_DE_VOZ).reduce((prev, cur) => prev.concat(cur, [])).join(' | ')} ;`;
-
 const inicializaReconhecimentoDeFala = (callback, microfoneEl) => {
   let prefix = ['', 'webkit', 'moz'];
   for (let p of prefix) {
@@ -42,9 +40,6 @@ const inicializaReconhecimentoDeFala = (callback, microfoneEl) => {
     
   if (!Array.isArray(prefix)) {
     let reconhecimento = new window[`${prefix}SpeechRecognition`]();
-    let palavrasParaReconhecimento = new window[`${prefix}SpeechGrammarList`]();
-    palavrasParaReconhecimento.addFromString(GRAMATICA, 1);
-    reconhecimento.grammars = palavrasParaReconhecimento;
     reconhecimento.lang = 'pt-BR';
     reconhecimento.continuous = false;
     reconhecimento.interimResults = false;
@@ -52,6 +47,9 @@ const inicializaReconhecimentoDeFala = (callback, microfoneEl) => {
     reconhecimento.start();
     reconhecimento.onresult = (e) => {
       let ultima = e.results.length - 1;
+      if (!e.results[ultima].isFinal && !e.results[ultima][0].isFinal) {
+        return;
+      }
       let comandos = e.results[ultima][0].transcript.trim().toLowerCase().split(' ');
 
       // cria um balão de texto mostrando o que foi falado/reconhecido ou não
